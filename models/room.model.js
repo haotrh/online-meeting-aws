@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
-  const RoomModel = sequelize.define("Room", {
+  const RoomModel = sequelize.define("room", {
     id: {
       allowNull: false,
       type: DataTypes.STRING,
@@ -10,6 +10,10 @@ module.exports = (sequelize) => {
     name: {
       allowNull: false,
       type: DataTypes.STRING,
+    },
+    isPrivate: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     allowChat: {
       type: DataTypes.BOOLEAN,
@@ -24,6 +28,14 @@ module.exports = (sequelize) => {
       defaultValue: true
     },
     allowScreenShare: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    allowRaiseHand: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    allowQuestion: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     }

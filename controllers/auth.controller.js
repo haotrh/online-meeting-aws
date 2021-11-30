@@ -10,6 +10,9 @@ const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(user);
 
+  const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
+  await emailService.sendVerificationEmail(user.email, verifyEmailToken);
+
   res.status(httpStatus.CREATED).send({ user, tokens });
 })
 
@@ -40,8 +43,13 @@ const refreshToken = catchAsync(async (req, res) => {
 });
 
 const sendVerificationEmail = catchAsync(async (req, res) => {
-  const verifyEmailToken = await tokenService.generateVerifyEmailToken(req.user);
-  await emailService.sendVerificationEmail(req.user.email, verifyEmailToken);
+  try {
+    const user = await userService.getUserByEmail(req.body.email)
+    if (user) {
+      const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
+      await emailService.sendVerificationEmail(req.body.email, verifyEmailToken);
+    }
+  } catch (error) { console.log(error) }
   res.status(httpStatus.NO_CONTENT).send();
 });
 
@@ -51,8 +59,14 @@ const verifyEmail = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
-  const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
-  await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
+  try {
+    const user = await userService.getUserByEmail(req.body.email)
+    if (user) {
+      const resetPasswordToken = await tokenService.generateResetPasswordToken(user);
+      console.log(resetPasswordToken)
+      await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
+    }
+  } catch (error) { console.log(error) }
   res.status(httpStatus.NO_CONTENT).send();
 });
 

@@ -2,27 +2,27 @@ const express = require("express");
 const { json, urlencoded } = require("express");
 const cors = require("cors");
 const helmet = require('helmet')
-const https = require("http")
+const https = require("https")
 const fs = require("fs")
 const path = require("path")
 const mediasoup = require('mediasoup')
 const config = require('./config/mediasoup.config')
 const Room = require('./lib/mediasoup/Room')
 const routes = require('./routes');
-const { sequelize } = require("./models/index");
 const { errorConverter, errorHandler } = require("./middleware/error");
 const passport = require('passport');
 const { jwtStrategy } = require('./config/passport.config');
 const { tokenService, roomService, userService } = require("./services");
 const logger = require("./config/logger.config");
 const Peer = require("./lib/mediasoup/Peer");
+const sequelize = require('./models').sequelize
 
 //Global variables
 let app;
 let httpsServer;
 let workers = [];
 let nextMediasoupWorkerIdx = 0;
-let roomList = new Map();
+global.roomList = new Map();
 const PORT = process.env.PORT || config.listenPort || 8080;
 
 //Init
@@ -31,7 +31,7 @@ const PORT = process.env.PORT || config.listenPort || 8080;
     await runMediasoupWorker();
     await runExpressApp();
     await runWebServer();
-    // await runSequelize();
+    //await runSequelize();
     await runSocketServer();
   } catch (err) {
     console.error(err);
@@ -98,16 +98,15 @@ async function runWebServer() {
     cert: fs.readFileSync(path.join(__dirname, config.sslCrt), "utf-8"),
   };
 
-  httpsServer = https.createServer(options, app);
-
-  await new Promise(resolve => {
-    httpsServer.listen(PORT, config.listenIp, resolve)
+  httpsServer = https.createServer(options, app).listen(PORT, () => {
+    console.log("Listening " + PORT);
   });
+
 }
 
 //RUN SEQUELIZE
 async function runSequelize() {
-  await sequelize.sync()
+  await sequelize.sync({ force: true })
   console.log('Drop and Resync Db');
 }
 
@@ -116,6 +115,11 @@ async function runSocketServer() {
   const io = require('socket.io')(httpsServer, {
     cors: {
       origin: "http://localhost:3000",
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
+    cors: {
+      origin: "https://online-meeting-tlcn.vercel.app/",
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -140,7 +144,6 @@ async function runSocketServer() {
         socket.disconnect(true);
         return;
       }
-
       user = await userService.getUserById(payload.sub);
     } catch (err) {
       logger.warn('Not authenticated');
@@ -162,6 +165,12 @@ async function runSocketServer() {
       return;
     }
 
+    if (room.isPrivate && !room.isPeerValid(user.id)) {
+      logger.warn('Private room');
+      socket.disconnect(true);
+      return;
+    }
+
     const peer = new Peer({
       user,
       socket
@@ -178,12 +187,11 @@ async function runSocketServer() {
     socket.emit("initialized")
 
     socket.on('disconnect', () => {
-      logger.warn("disconnect")
       if (!socket.roomId) {
         return;
       }
 
-      const room = roomList.get(socket.roomId)
+      const room = global.roomList.get(socket.roomId)
 
       room.removePeer(socket.id);
     })
@@ -200,7 +208,7 @@ const getMediasoupWorker = () => {
 };
 
 const getOrCreateRoom = async ({ roomId, socket }) => {
-  let room = roomList.get(roomId)
+  let room = global.roomList.get(roomId)
 
   if (room && room.closed) {
     room = null;
@@ -222,11 +230,11 @@ const getOrCreateRoom = async ({ roomId, socket }) => {
       socket,
       worker: getMediasoupWorker(),
       roomClose: () => {
-        roomList.delete(roomId)
+        global.roomList.delete(roomId)
       }
     })
 
-    roomList.set(room.id, room);
+    global.roomList.set(room.id, room);
   }
 
   return room
