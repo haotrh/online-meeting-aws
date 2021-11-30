@@ -118,11 +118,6 @@ async function runSocketServer() {
       methods: ["GET", "POST"],
       credentials: true,
     },
-    cors: {
-      origin: "https://online-meeting-tlcn.vercel.app/",
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
   });
 
   io.on("connection", async (socket) => {
