@@ -114,7 +114,7 @@ async function runSequelize() {
 async function runSocketServer() {
   const io = require('socket.io')(httpsServer, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: "https://online-meeting-tlcn.vercel.app/",
       methods: ["GET", "POST"],
       credentials: true,
     },
