@@ -126,6 +126,7 @@ async function runSocketServer() {
   });
 
   io.on("connection", async (socket) => {
+    console.log("socket_connection")
     const { roomId, token } = socket.handshake.query;
 
     if (!roomId || !token) {
