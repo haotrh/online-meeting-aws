@@ -34,14 +34,11 @@ const PORT = process.env.PORT || config.listenPort || 8080;
   try {
     // Open the interactive server.
     await interactiveServer(roomList);
-    // if (config.prometheus) {
-    //   await promExporter(roomList, config.prometheus);
-    // }
 
     await runMediasoupWorker();
     await runExpressApp();
     await runWebServer();
-    //await runSequelize();
+    await runSequelize();
     await runSocketServer();
   } catch (err) {
     console.error(err);
