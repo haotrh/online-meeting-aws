@@ -17,6 +17,8 @@ const getLocalIp = () => {
     return localIp
 }
 
+console.log(process.env.SERVER_PUBLIC_IP)
+
 module.exports = {
     listenIp: '0.0.0.0',
     listenPort: 8080,
