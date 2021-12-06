@@ -1,5 +1,6 @@
 const os = require('os')
 const ifaces = os.networkInterfaces()
+require('dotenv').config()
 
 const getLocalIp = () => {
     let localIp = '127.0.0.1'
