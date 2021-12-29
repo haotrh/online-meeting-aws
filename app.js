@@ -102,6 +102,7 @@ async function runExpressApp() {
 //RUN WEB SERVER
 async function runWebServer() {
   const options = {
+    ca: fs.readFileSync(path.join(__dirname, config.sslCa), "utf-8"),
     key: fs.readFileSync(path.join(__dirname, config.sslKey), "utf-8"),
     cert: fs.readFileSync(path.join(__dirname, config.sslCrt), "utf-8"),
   };

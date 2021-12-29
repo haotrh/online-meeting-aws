@@ -23,8 +23,9 @@ console.log(process.env.SERVER_PUBLIC_IP)
 module.exports = {
     listenIp: '0.0.0.0',
     listenPort: 8080,
-    sslCrt: './ssl/cert.pem',
-    sslKey: './ssl/key.pem',
+    sslCa: './ssl/ca_bundle.crt',
+    sslCrt: './ssl/certificate.crt',
+    sslKey: './ssl/private.key',
 
     prometheus: {
         deidentify: false, // deidentify IP addresses
